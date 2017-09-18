@@ -1,0 +1,93 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Service Area Task</title>
+    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.0/js/dojo/dijit/themes/tundra/tundra.css">
+    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.0"></script>
+    <script type="text/javascript">
+      dojo.require("esri.map");
+      dojo.require("esri.tasks.gp");
+
+      var map, gp;
+	  /*crear e inicializar la variable de tiempos 
+	  //los valores están en minutos, se recomienda dar valores pequeños para que el tiempo de proceso 
+	  no sea excesivamente largo porque una tarea de geoprocesamiento síncrona bloqueará la aplicación 
+	  hasta que el cálculo haya sido realizado*/
+	  var driveTimes = "2 5 7";	
+		
+      /*Initialize map, GP and image params*/
+      function init() {
+        var startExtent = new esri.geometry.Extent(-117.211, 32.677, -117.109, 32.750, new esri.SpatialReference({wkid:4326}) );
+        map = new esri.Map("mapDiv", { extent: startExtent });
+        var streetMap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer");
+        map.addLayer(streetMap);
+		
+		/*Crear una nueva instancia de la tarea Geoprocessor proporcionando una URL del servicio de geoprocesamiento CreateDriveTimePolygons 
+		y registrar el evento Map.onClick con la función computeServiceArea( ). Cuando el usuario haga click sobre el mapa, 
+		la función computeServiceArea() será llamada pasándole el punto del mapa*/
+		gp = new esri.tasks.Geoprocessor("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Network/ESRI_DriveTime_US/GPServer/CreateDriveTimePolygons");
+        dojo.connect(map, "onClick", computeServiceArea);
+      }
+
+
+      function computeServiceArea(evt) {
+        map.graphics.clear();
+        var pointSymbol = new esri.symbol.SimpleMarkerSymbol();
+        pointSymbol.setOutline = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255,0,0]), 1);
+        pointSymbol.setSize(5);
+        pointSymbol.setColor(new dojo.Color([0,255,0,0.25]));
+
+        var graphic = new esri.Graphic(evt.mapPoint,pointSymbol);
+        map.graphics.add(graphic);
+		
+		//se crea un array
+		var features= [];
+		//se añade el punto en el que el usuario a hecho click
+        features.push(graphic);
+		//Este array se le asigna a una variable FeatureSet como un array de gráficos
+        var featureSet = new esri.tasks.FeatureSet();
+        featureSet.features = features;
+		//objeto JSON que contiene los parámetros de entrada al modelo, estos parámetros aparecen en el directorio del servicio (Parameter)
+        var params = { "Input_Location":featureSet, "Drive_Times":driveTimes };
+		//llama al modelo CreateDriveTimePolygons en nuestra instancia de ArcGIS Server. Al hacer esto, se le pasan los parámetros como los tiempos y un conjunto de features al modelo como variables que se usarán en el modelo de geoprocesamiento. El segundo parámetro es la función callback que se ejecutará cuando el modelo de geoprocesamiento se haya completado
+        gp.execute(params, getDriveTimePolys);
+      }
+
+      function getDriveTimePolys(results, messages) {
+        var features = results[0].value.features;
+        for (var f=0, fl=features.length; f<fl; f++) {
+          var feature = features[f];
+          if(f == 0) {
+            var polySymbolRed = new esri.symbol.SimpleFillSymbol();
+            polySymbolRed.setOutline(new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0,0,0,0.5]), 1));
+            polySymbolRed.setColor(new dojo.Color([255,0,0,0.7]));
+            feature.setSymbol(polySymbolRed);
+            }
+          else if(f == 1) {
+            var polySymbolGreen = new esri.symbol.SimpleFillSymbol();
+            polySymbolGreen.setOutline(new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0,0,0,0.5]), 1));
+            polySymbolGreen.setColor(new dojo.Color([0,255,0,0.7]));
+            feature.setSymbol(polySymbolGreen);
+            }
+          else if(f == 2) {
+            var polySymbolBlue = new esri.symbol.SimpleFillSymbol();
+            polySymbolBlue.setOutline(new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0,0,0,0.5]), 1));
+            polySymbolBlue.setColor(new dojo.Color([0,0,255,0.7]));
+            feature.setSymbol(polySymbolBlue);
+          }
+          map.graphics.add(feature);
+        }
+      }
+
+      dojo.addOnLoad(init);
+    </script>
+
+  </head>
+  <body class="tundra">
+    <div id="mapDiv" style="width:800px; height:600px; border:1px solid #000;"></div>
+    Single click the map.  A service area GP task will be executed synchronously and on
+    completion the results will be drawn as graphic features to the map.  The drive time polygons are 2, 5,
+    and 7 minutes.
+  </body>
+</html>
+
