@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bootstrap 101 Template</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Bootstrap -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+
+    <!-- Add CSS for the mapping components -->
+    <link rel="stylesheet" type="text/css" href="http://js.arcgis.com/3.12/esri/css/esri.css">
+    <link rel="stylesheet" type="text/css" href="css/bootstrapmap.css">
+    <style type="text/css">
+        #mapDiv {
+            min-height: 100px;
+            max-height: 1000px;
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- Add HTML to define the layout of the page and the map -->
+<div class="container">
+    <div id="mapDiv"></div>
+</div>
+
+<!-- Add JS to load the responsive map -->
+<script>
+    var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+    var dojoConfig = {
+        packages: [{
+            name: "application",
+            location: package_path + '/js'
+        }, {
+            name: "bootstrap",
+            location: "//rawgit.com/xsokev/Dojo-Bootstrap/master"
+        }]
+    };
+</script>
+<script src="http://js.arcgis.com/3.12compact"></script>
+<script>
+    require(["esri/map", "application/bootstrapmap", "dojo/domReady!"],
+            function (Map, BootstrapMap) {
+                // Get a reference to the ArcGIS Map class
+                var map = BootstrapMap.create("mapDiv", {
+                    basemap: "national-geographic",
+                    center: [-1, 40],
+                    zoom: 5
+                });
+            });
+</script>
+
+</body>
+</html>
+                
