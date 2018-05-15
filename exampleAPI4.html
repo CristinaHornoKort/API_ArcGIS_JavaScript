@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Ejemplo Carlos v4</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.6/"></script>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/layers/FeatureLayer",
+      "esri/Camera",
+      "esri/symbols/WebStyleSymbol",
+      "dojo/domReady!"
+    ], function(Map, SceneView,FeatureLayer,Camera,WebStyleSymbol) {
+
+      var map = new Map({
+        basemap: "streets",
+        ground: "world-elevation"
+      });
+
+      var view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        scale: 50000000,
+        center: [-101.17, 21.78]
+      });
+
+
+      //********************Visualizacion punto 3D//********************//********************//********************
+      // Create iconSymbol and add to renderer
+      var iconSymbol = {
+        type: "point-3d", // autocasts as new PointSymbol3D()
+        symbolLayers: [{
+          type: "icon", // autocasts as new IconSymbol3DLayer()
+          size: 12,
+          resource: {
+            primitive: "square"
+          },
+          material: {
+            color: "orange"
+          },
+          outline: {
+            color: "white",
+            size: 1
+          }
+        }]
+      };
+
+      var iconSymbolRenderer = {
+        type: "simple", // autocasts as new SimpleRenderer()
+        symbol: iconSymbol
+      };
+      //********************Visualizacion objecto 3D//********************//********************//********************
+      // Create objectSymbol and add to renderer
+      var objectSymbol = {
+        type: "point-3d", // autocasts as new PointSymbol3D()
+        symbolLayers: [{
+          type: "object", // autocasts as new ObjectSymbol3DLayer()
+          width: 7,
+          height: 10,
+          resource: {
+            primitive: "cone"
+          },
+          material: {
+            color: "#FFD700"
+          }
+        }]
+      };
+
+      var objectSymbolRenderer = {
+        type: "simple", // autocasts as new SimpleRenderer()
+        symbol: objectSymbol
+      };
+
+      //********************Visualizacion objecto WebStyleSymbol//********************//********************//********************
+      var renderer = {
+        type: "simple", // autocasts as new SimpleRenderer()
+        symbol: new WebStyleSymbol({
+          name: "Porsche_Boxter",
+          styleName: "EsriRealisticTransportationStyle"
+        }),
+      };
+
+          // Construct the layer and set the renderer and popupTemplate on it
+      var coches = new FeatureLayer({
+        url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Landscape_Trees/FeatureServer/0",
+        renderer: renderer,
+     });
+     map.add(coches);
+
+     var cam = new Camera({
+       heading: 0, // face due east
+       tilt: 83, // looking from a bird's eye view
+       position: {
+         x: -9177356,
+         y: 4246783,
+         z: 723,
+         spatialReference: { wkid: 3857 }
+       }
+     });
+
+     view.camera = cam;
+
+     renderer.symbol.fetchSymbol()
+      .then(function(ambulanceSymbol){
+     /*
+     var objectSymbolLayer = ambulanceSymbol.symbolLayers.getItemAt(0).clone();
+     objectSymbolLayer.material = { color: "blue" };
+     objectSymbolLayer.height *= 2;
+     objectSymbolLayer.width *= 2;
+     objectSymbolLayer.depth *= 2;
+     ambulanceSymbol.symbolLayers = [ objectSymbolLayer ];
+
+     var renderer = coches.renderer.clone();
+     renderer.symbol = ambulanceSymbol;
+     coches.renderer = renderer;
+     */
+   });
+  });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html>
